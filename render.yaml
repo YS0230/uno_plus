@@ -5,7 +5,9 @@ services:
     plan: free
     region: singapore
     # 前端 build 完由 Express 一起托管，WebSocket 與 HTTP 共用同一個 port
-    buildCommand: npm ci && npm run build
+    # NODE_ENV=production 會讓 npm 預設 omit dev 依賴，vite 裝不起來，
+    # 所以 build 階段要明確 --include=dev
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /healthz
     autoDeploy: true
