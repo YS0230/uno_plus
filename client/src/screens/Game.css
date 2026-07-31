@@ -1,0 +1,598 @@
+.game {
+  --felt-in: var(--table-in);
+  --felt-out: var(--table-out);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  min-height: 0;
+  position: relative;
+}
+
+.game--felt-green { --felt-in: #7ADB56; --felt-out: #3F9424; }
+.game--felt-blue { --felt-in: #4FA3EC; --felt-out: #1E5FA8; }
+.game--felt-pink { --felt-in: #FF8FB0; --felt-out: #D14A75; }
+.game--felt-wood { --felt-in: #E5A063; --felt-out: #9C5A2A; }
+.game--felt-violet { --felt-in: var(--table-in); --felt-out: var(--table-out); }
+
+/* ------------------------------------------------------------------ 頂列 */
+
+.game__topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.game__room {
+  flex: 1;
+  font: 800 13px/1 var(--font-display);
+  color: var(--brand-violet);
+  letter-spacing: 0.1em;
+  padding-left: 4px;
+}
+
+.game__leave {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+}
+
+.picker__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.picker .muted {
+  max-width: 240px;
+  text-align: center;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------- 回合資訊 */
+
+.turnbar {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.turnbar__item,
+.turnbar__now {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--lift-sm);
+  font: 800 14px/1 var(--font-display);
+  color: var(--ink);
+}
+
+.turnbar__now.is-me {
+  background: linear-gradient(180deg, #FFE873, var(--btn-gold));
+  color: #6A4700;
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+
+.turnbar__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+.turnbar__now.is-me .turnbar__label {
+  color: #8A6200;
+}
+
+.turnbar__timer {
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-pink);
+}
+
+.turnbar__dir {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------ 桌面 */
+
+.table {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 28px;
+  isolation: isolate;
+}
+
+.table__felt {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 28px;
+  border: 5px solid rgba(255, 255, 255, 0.85);
+  background:
+    radial-gradient(closest-side at 50% 50%, var(--felt-in), var(--felt-out)),
+    var(--felt-out);
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.18), inset 0 0 60px rgba(0, 0, 0, 0.18);
+}
+
+/* 出牌方向的環形提示 */
+.table__felt::after {
+  content: '';
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 3px dashed rgba(255, 255, 255, 0.18);
+}
+
+/* ------------------------------------------------------------------ 對手 */
+
+.oseat {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+/* 上方座位排成一列，才不會往下長到壓到中央牌堆 */
+.oseat--top {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.oseat--left { top: 50%; left: 10px; transform: translateY(-50%); }
+.oseat--right { top: 50%; right: 10px; transform: translateY(-50%); }
+
+.oseat__cards {
+  display: flex;
+  align-items: flex-end;
+  padding-left: 9px;
+}
+
+.oseat__body {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.oseat__avatar {
+  position: relative;
+}
+
+.oseat__count {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  border: 2px solid #fff;
+  background: var(--btn-gold);
+  color: #6A4700;
+  font: 800 12px/1 var(--font-display);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.oseat__emote {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 26px;
+  animation: float-up 3s ease-out forwards;
+  pointer-events: none;
+}
+
+.oseat__name {
+  max-width: 108px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 800 12px/1.3 var(--font-display);
+  color: #fff;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.oseat__tags {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.oseat.is-current .oseat__name {
+  color: #FFE873;
+}
+
+.oseat__catch {
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  border: 3px solid #fff;
+  background: linear-gradient(180deg, #FF8FA3, var(--btn-pink));
+  color: #fff;
+  font: 800 13px/1 var(--font-display);
+  cursor: pointer;
+  box-shadow: var(--lift-sm);
+  animation: wiggle 0.5s ease-in-out infinite;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* ------------------------------------------------------------ 桌面中央 */
+
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+}
+
+.center__pile {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+.center__draw {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.center__draw:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.center__draw.is-active {
+  animation: pulse-ring 1.6s ease-out infinite;
+  border-radius: 12px;
+}
+
+.center__draw.is-active:hover {
+  transform: translateY(-5px);
+}
+
+.center__count {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  border: 3px solid #fff;
+  background: var(--btn-blue);
+  color: #fff;
+  font: 800 12px/1 var(--font-display);
+}
+
+.center__discard {
+  position: relative;
+}
+
+.center__color {
+  position: absolute;
+  right: -10px;
+  bottom: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.center__caption {
+  font: 800 11px/1 var(--font-display);
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ------------------------------------------------------------------ 手牌 */
+
+.hand {
+  flex: none;
+}
+
+/*
+ * overflow-x: auto 會強制 overflow-y 變成 auto/hidden，牌就會被裁掉。
+ * 所以高度要留足：卡牌本身 154px + 旋轉的外擴 + hover 上浮 22px 的空間。
+ */
+.hand__rail {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding: 34px 12px 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  min-height: 220px;
+}
+
+.hand__rail > .uno-card {
+  margin-left: -22px;
+}
+
+.hand__rail > .uno-card:first-child {
+  margin-left: 0;
+}
+
+.hand__empty {
+  margin: auto;
+  font: 800 16px/1 var(--font-display);
+  color: var(--brand-violet);
+}
+
+.scroll-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scroll-x::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------- 我的狀態 */
+
+.mystatus {
+  position: absolute;
+  left: 50%;
+  bottom: 158px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 5;
+}
+
+/* ------------------------------------------------------------- UNO 按鈕 */
+
+.unobtn {
+  position: absolute;
+  right: 18px;
+  bottom: 92px;
+  z-index: 10;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  background: radial-gradient(circle at 50% 30%, #FF7A7A, var(--c-red) 60%, var(--c-red-dark));
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  gap: 0;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.28), 0 0 26px rgba(255, 110, 130, 0.8);
+  animation: pulse-ring 1s ease-out infinite;
+}
+
+.unobtn:active {
+  transform: translateY(4px);
+}
+
+.unobtn__label {
+  font: italic 900 30px/1 var(--font-display);
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  grid-area: 1 / 1;
+  transform: translateY(-8px);
+}
+
+.unobtn__ms {
+  grid-area: 1 / 1;
+  transform: translateY(22px);
+  font: 800 13px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 緩衝倒數的環形進度 */
+.unobtn__ring {
+  grid-area: 1 / 1;
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: conic-gradient(#FFE873 calc(var(--ratio) * 360deg), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  pointer-events: none;
+}
+
+.unobtn.is-race {
+  animation: wiggle 0.35s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------- 表情工具 */
+
+.game__tools {
+  position: absolute;
+  left: 18px;
+  bottom: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.game__tool {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--lift-sm);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.game__tool.is-on {
+  background: var(--btn-gold);
+}
+
+.game__tray {
+  position: absolute;
+  left: 74px;
+  bottom: 92px;
+  z-index: 11;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: min(320px, 62vw);
+  padding: 10px;
+  border-radius: var(--r-md);
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--soft);
+  animation: pop-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.game__tray-emote {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--paper-2);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.game__tray-quick {
+  padding: 7px 12px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--line);
+  background: var(--paper-2);
+  font: 700 13px/1 var(--font-display);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ 選色 */
+
+.picker-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(40, 28, 80, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.picker {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  border: 4px solid #fff;
+  background: var(--paper);
+  box-shadow: var(--soft);
+  animation: pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.picker h3 {
+  margin: 0;
+  font: 800 20px/1 var(--font-display);
+  color: var(--section-blue);
+}
+
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.picker__swatch {
+  width: 104px;
+  height: 72px;
+  border-radius: var(--r-md);
+  border: 4px solid;
+  color: #fff;
+  font: 800 16px/1 var(--font-display);
+  cursor: pointer;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: var(--lift-sm);
+  transition: transform 0.12s ease;
+}
+
+.picker__swatch:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
+/* ------------------------------------------------------------------ RWD */
+
+/* 視窗不夠高時（筆電常見的 768/800），對手的牌堆先讓位給中央 */
+@media (max-height: 820px) {
+  .oseat__cards { display: none; }
+}
+
+@media (max-width: 760px) {
+  .game { padding: 8px 8px 10px; }
+
+  .oseat--left { left: 10px; }
+  .oseat--right { right: 10px; }
+  .oseat__name { max-width: 66px; }
+  .oseat__cards { display: none; }
+
+  .center { gap: 12px; }
+  .center__draw .uno-card,
+  .center__discard .uno-card { --card-w: 64px; }
+
+  .hand__rail {
+    justify-content: flex-start;
+    min-height: 186px;
+    /* 左右留空給表情按鈕與 UNO 按鈕，手牌才不會被壓在下面 */
+    padding: 26px 84px 6px 56px;
+  }
+  .hand__rail > .uno-card { --card-w: 92px; margin-left: -30px; }
+
+  .unobtn {
+    width: 76px;
+    height: 76px;
+    right: 10px;
+    bottom: 80px;
+  }
+  .unobtn__label { font-size: 23px; transform: translateY(-6px); }
+  .unobtn__ms { font-size: 11px; transform: translateY(17px); }
+
+  .game__tools { left: 8px; bottom: 80px; }
+  .game__tool { width: 40px; height: 40px; font-size: 19px; }
+  .game__tray { left: 56px; bottom: 80px; }
+
+  .mystatus { bottom: 136px; }
+
+  .turnbar__item, .turnbar__now { padding: 5px 10px; font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .turnbar__item:nth-child(4) { display: none; }
+}

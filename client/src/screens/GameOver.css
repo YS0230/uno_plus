@@ -1,0 +1,117 @@
+.over-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(40, 28, 80, 0.55);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: fade-up 0.2s ease;
+}
+
+.over {
+  width: min(430px, 100%);
+  max-height: 92dvh;
+  overflow-y: auto;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  border: 4px solid #fff;
+  background: linear-gradient(180deg, #FFFDF5, #FFF6E4);
+  box-shadow: 0 12px 0 rgba(120, 90, 30, 0.18), var(--soft);
+  animation: pop-in 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.over__crown {
+  animation: wiggle 2.4s ease-in-out infinite;
+}
+
+.over__title {
+  margin: 0;
+  font: 900 clamp(24px, 6vw, 32px) / 1.1 var(--font-display);
+  color: var(--brand-pink);
+  text-align: center;
+}
+
+.over__time {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 13px/1 var(--font-display);
+  color: var(--ink-soft);
+}
+
+.over__list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  gap: 6px;
+}
+
+.over__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  border: 2px solid #F0E3C4;
+  background: #fff;
+}
+
+.over__row.is-me {
+  border-color: var(--btn-gold);
+  background: color-mix(in srgb, var(--btn-gold) 12%, #fff);
+}
+
+.over__rank {
+  width: 26px;
+  text-align: center;
+  font: 800 16px/1 var(--font-display);
+  color: var(--ink-soft);
+}
+
+.over__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 800 14px/1.2 var(--font-display);
+}
+
+.over__you {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.over__cards {
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.over__score {
+  min-width: 46px;
+  text-align: right;
+  font: 800 14px/1 var(--font-display);
+  color: var(--btn-pink);
+}
+
+.over__score.is-win {
+  color: var(--btn-green);
+}
+
+.over__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

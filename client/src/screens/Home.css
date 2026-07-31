@@ -1,0 +1,166 @@
+.home {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 72px 20px 32px;
+  position: relative;
+}
+
+.home__hero {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.home__logo {
+  width: min(280px, 62vw);
+  height: auto;
+  filter: drop-shadow(0 8px 12px rgba(120, 60, 160, 0.28));
+  animation: wiggle 4s ease-in-out infinite;
+}
+
+.home__tagline {
+  margin: 0;
+  font: 800 15px/1 var(--font-display);
+  color: var(--brand-violet);
+  letter-spacing: 0.06em;
+}
+
+.home__menu {
+  display: grid;
+  gap: 12px;
+  width: min(320px, 100%);
+}
+
+/* ------------------------------------------------------------- 玩家資訊卡 */
+
+.player-chip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border-radius: var(--r-pill);
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--lift-sm), var(--soft);
+  cursor: pointer;
+  font: 800 14px/1 var(--font-display);
+  color: var(--ink);
+  max-width: 60vw;
+}
+
+.player-chip:hover {
+  transform: translateY(-1px);
+}
+
+.player-chip__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-chip__ghost {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.player-chip__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--btn-pink);
+  flex: none;
+}
+
+.player-chip__dot.is-on {
+  background: var(--btn-green);
+}
+
+/* ------------------------------------------------------------- 頭像選擇 */
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.avatar-grid__item {
+  border: 3px solid transparent;
+  border-radius: 50%;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.avatar-grid__item:hover {
+  transform: scale(1.08);
+}
+
+.avatar-grid__item.is-active {
+  border-color: var(--btn-green);
+  background: color-mix(in srgb, var(--btn-green) 16%, transparent);
+}
+
+/* ----------------------------------------------------------------- 音效 */
+
+.sound-toggles {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  gap: 8px;
+}
+
+/* 遊戲畫面上的版本：跟著頂列排，不絕對定位 */
+.sound-toggles--compact {
+  position: static;
+  gap: 6px;
+}
+
+.sound-toggles--compact .sound-toggles__btn {
+  width: 36px;
+  height: 36px;
+  border-width: 2px;
+}
+
+.sound-toggles__btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(1);
+  transition: opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease;
+}
+
+.sound-toggles__btn.is-on {
+  opacity: 1;
+  filter: none;
+}
+
+.sound-toggles__btn:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .home {
+    padding-top: 84px;
+  }
+}

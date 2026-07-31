@@ -1,0 +1,60 @@
+/* 由 tools/extract-assets.mjs 從 素材圖.png 取樣產生 —— 請勿手改，改座標後重跑 npm run extract-assets */
+:root {
+  /* 卡牌四色 + 紫（取自 CARD 區） */
+  --c-red: #F43F48;
+  --c-yellow: #FED706;
+  --c-green: #75D223;
+  --c-blue: #1379DF;
+  --c-violet: #A64FDB;
+
+  /* 各色的深色描邊 / 陰影（由主色壓暗） */
+  --c-red-dark: #B41F33;
+  --c-yellow-dark: #C48A00;
+  --c-green-dark: #4A9410;
+  --c-blue-dark: #0B4E9E;
+  --c-violet-dark: #6E2CA0;
+
+  /* 按鈕（取自 BUTTON 區） */
+  --btn-gold: #FECA07;
+  --btn-green: #7CD51A;
+  --btn-blue: #2E75E7;
+  --btn-violet: #AA59E2;
+  --btn-pink: #FB5676;
+  --btn-sky: #1EABF2;
+
+  /* 桌布（取自 TABLE BACKGROUND 區） */
+  --felt-green: #64C641;
+  --felt-blue: #2D86DB;
+  --felt-pink: #FD6D93;
+  --felt-wood: #D88749;
+  --felt-violet: #9C66DE;
+
+  /* 遊戲桌面漸層（取自 GAME TABLE 示意圖） */
+  --table-in: #7559CC;
+  --table-out: #4B3EA0;
+
+  /* 品牌字色 */
+  --brand-pink: #FB4574;
+  --brand-violet: #8440D1;
+  --section-blue: #1940CB;
+
+  /* 中性色 */
+  --ink: #2C2A3B;
+  --ink-soft: #6B6880;
+  --ink-faint: #A6A2B8;
+  --paper: #FFFFFF;
+  --paper-2: #F6F4FB;
+  --page-bg: #F3EFFB;
+  --line: #E6E1F2;
+  --black-card: #1E1C22;
+
+  /* 泡泡糖玩具風的共用形狀語彙 */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+  --ring: 4px; /* 厚白描邊 */
+  --lift: 0 6px 0 rgba(0, 0, 0, 0.16); /* 底部硬陰影 */
+  --lift-sm: 0 3px 0 rgba(0, 0, 0, 0.16);
+  --soft: 0 8px 20px rgba(76, 58, 140, 0.18);
+}

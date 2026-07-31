@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: uno-plus
+    runtime: node
+    plan: free
+    region: singapore
+    # 前端 build 完由 Express 一起托管，WebSocket 與 HTTP 共用同一個 port
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: NODE_ENV
+        value: production

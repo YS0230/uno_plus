@@ -1,0 +1,357 @@
+/* ------------------------------------------------------------------ Button */
+
+.btn {
+  --btn-base: var(--btn-blue);
+  --btn-light: #ffffff66;
+  --btn-dark: #00000033;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: var(--ring) solid #fff;
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--btn-base) 78%, white) 0%, var(--btn-base) 55%, color-mix(in srgb, var(--btn-base) 78%, black) 100%);
+  box-shadow: var(--lift), var(--soft);
+  color: #fff;
+  font: 800 17px/1 var(--font-display);
+  letter-spacing: 0.02em;
+  padding: 13px 26px;
+  cursor: pointer;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.12s ease;
+  text-shadow: 0 2px 0 color-mix(in srgb, var(--btn-base) 45%, black);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: saturate(1.1) brightness(1.04);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.16), var(--soft);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--section-blue);
+  outline-offset: 3px;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+
+.btn--gold { --btn-base: var(--btn-gold); }
+.btn--green { --btn-base: var(--btn-green); }
+.btn--blue { --btn-base: var(--btn-blue); }
+.btn--violet { --btn-base: var(--btn-violet); }
+.btn--pink { --btn-base: var(--btn-pink); }
+.btn--sky { --btn-base: var(--btn-sky); }
+
+.btn--ghost {
+  background: #fff;
+  color: var(--ink-soft);
+  border-color: var(--line);
+  text-shadow: none;
+  box-shadow: var(--lift-sm);
+}
+
+.btn--sm { padding: 8px 16px; font-size: 14px; border-width: 3px; }
+.btn--lg { padding: 17px 40px; font-size: 21px; }
+.btn--block { display: flex; width: 100%; }
+
+.btn--round {
+  padding: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+.btn--round.btn--sm { width: 40px; height: 40px; }
+.btn--round.btn--lg { width: 64px; height: 64px; }
+
+.btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------------- Panel */
+
+.panel {
+  background: var(--paper);
+  border: 3px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 10px 0 rgba(120, 105, 175, 0.12), var(--soft);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel--warm {
+  background: #fffdf5;
+  border-color: #f6e6bf;
+}
+
+.panel__title {
+  margin: 0;
+  padding: 14px 20px 10px;
+  font: 800 19px/1.2 var(--font-display);
+  color: var(--section-blue);
+  text-align: center;
+  border-bottom: 2px dashed var(--line);
+}
+
+.panel--warm .panel__title {
+  color: var(--brand-pink);
+  border-bottom-color: #f6e6bf;
+}
+
+.panel__body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.panel__footer {
+  padding: 12px 20px 18px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------------- Field */
+
+.field {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.field__label {
+  white-space: nowrap;
+}
+
+.field__control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.field__hint {
+  grid-column: 2;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.field input[type='text'],
+.field input[type='password'],
+.field input[type='number'],
+.field select,
+.input {
+  width: 100%;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  font: 600 14px/1.2 var(--font-body);
+  color: var(--ink);
+  background: var(--paper-2);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field input:focus,
+.field select:focus,
+.input:focus {
+  border-color: var(--btn-sky);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--btn-sky) 25%, transparent);
+}
+
+.field select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+    linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+  background-position: right 14px center, right 9px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+/* ------------------------------------------------------------------ Toggle */
+
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  border: 3px solid #fff;
+  border-radius: var(--r-pill);
+  background: #d8d4e6;
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.18s ease;
+  flex: none;
+}
+
+.toggle.is-on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--btn-green) 80%, white), var(--btn-green));
+}
+
+.toggle__knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toggle.is-on .toggle__knob {
+  transform: translateX(22px);
+}
+
+.toggle:focus-visible {
+  outline: 3px solid var(--section-blue);
+  outline-offset: 2px;
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ Avatar */
+
+.avatar {
+  --avatar-ring: transparent;
+  display: block;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 3px var(--avatar-ring), 0 3px 0 rgba(0, 0, 0, 0.14);
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+  flex: none;
+}
+
+.avatar.is-dim {
+  filter: grayscale(1) brightness(0.85);
+  opacity: 0.65;
+}
+
+.icon {
+  display: block;
+  flex: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.16));
+}
+
+/* ------------------------------------------------------------------- Modal */
+
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(40, 28, 80, 0.5);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: fade-up 0.18s ease;
+}
+
+.modal {
+  position: relative;
+  width: min(420px, 100%);
+  max-height: 90dvh;
+  animation: pop-in 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+}
+
+.modal--wide {
+  width: min(680px, 100%);
+}
+
+.modal > .panel {
+  flex: 1;
+  max-height: 90dvh;
+}
+
+.modal > .panel > .panel__body {
+  overflow-y: auto;
+}
+
+.modal__close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--btn-pink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--lift-sm);
+}
+
+/* ------------------------------------------------------------------- Badge */
+
+.badge {
+  --badge-base: var(--btn-blue);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  border: 2px solid #fff;
+  background: var(--badge-base);
+  color: #fff;
+  font: 800 11px/1.4 var(--font-display);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.14);
+  white-space: nowrap;
+}
+
+.badge--gold { --badge-base: var(--btn-gold); }
+.badge--green { --badge-base: var(--btn-green); }
+.badge--violet { --badge-base: var(--btn-violet); }
+.badge--pink { --badge-base: var(--btn-pink); }
+.badge--sky { --badge-base: var(--btn-sky); }
+.badge--ghost { --badge-base: var(--ink-faint); }
+
+/* ----------------------------------------------------------------- Spinner */
+
+.spinner-wrap {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 20px;
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.6);
+  border-top-color: var(--btn-violet);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

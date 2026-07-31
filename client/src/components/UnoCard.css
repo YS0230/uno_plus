@@ -1,0 +1,67 @@
+.uno-card {
+  --card-rotate: 0deg;
+  --card-lift: 0px;
+  display: block;
+  width: var(--card-w, 84px);
+  height: auto;
+  overflow: visible;
+  flex: none;
+  filter: drop-shadow(0 4px 0 rgba(30, 20, 60, 0.28));
+  transform: rotate(var(--card-rotate)) translateY(var(--card-lift));
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.16s ease;
+}
+
+.uno-card--xs { --card-w: 34px; }
+.uno-card--sm { --card-w: 52px; }
+.uno-card--md { --card-w: 84px; }
+.uno-card--lg { --card-w: 108px; }
+
+.uno-card__value {
+  font: 900 96px/1 var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+.uno-card__badge {
+  font: 900 40px/1 var(--font-display);
+}
+
+.uno-card__corner {
+  font: 900 34px/1 var(--font-display);
+}
+
+.uno-card__logo {
+  font: italic 900 44px/1 var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.uno-card.is-clickable {
+  cursor: pointer;
+}
+
+.uno-card.is-playable {
+  --card-lift: -10px;
+  filter: drop-shadow(0 4px 0 rgba(30, 20, 60, 0.28)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+}
+
+.uno-card.is-clickable:hover,
+.uno-card.is-clickable:focus-visible {
+  --card-lift: -22px;
+  outline: none;
+  filter: drop-shadow(0 8px 0 rgba(30, 20, 60, 0.3)) drop-shadow(0 0 14px rgba(255, 245, 160, 0.95));
+}
+
+.uno-card.is-selected {
+  --card-lift: -26px;
+}
+
+/* 不能出的牌只要「退後一步」就好 —— 壓太暗會讓玩家看不出手上有什麼牌 */
+.uno-card.is-dimmed {
+  filter: drop-shadow(0 4px 0 rgba(30, 20, 60, 0.28)) brightness(0.94) saturate(0.72);
+  opacity: 0.82;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uno-card {
+    transition: none;
+  }
+}
