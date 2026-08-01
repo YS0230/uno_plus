@@ -197,10 +197,78 @@
   position: absolute;
   top: -22px;
   left: 50%;
-  transform: translateX(-50%);
   font-size: 26px;
-  animation: float-up 3s ease-out forwards;
+  /* 自己的 keyframe：float-up 只帶 translateY，會蓋掉置中用的 translateX */
+  animation: emote-float 3s ease-out forwards;
   pointer-events: none;
+}
+
+@keyframes emote-float {
+  0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+  20% { transform: translate(-50%, -6px) scale(1.05); opacity: 1; }
+  80% { transform: translate(-50%, -14px) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -26px) scale(0.95); opacity: 0; }
+}
+
+/* 文字訊息：頭像上方的對話泡泡，時間跟 store 的 BUBBLE_MS.text 對齊 */
+.oseat__say {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 5;
+  width: max-content;
+  max-width: 150px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 2px solid #fff;
+  background: var(--paper-2, #fff);
+  color: #3B2A5A;
+  font: 700 13px/1.25 var(--font-display);
+  text-align: center;
+  overflow-wrap: anywhere;
+  box-shadow: var(--lift-sm);
+  animation: bubble-life 4.2s ease-out forwards;
+  pointer-events: none;
+}
+
+/* 泡泡尾巴 */
+.oseat__say::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top-color: #fff;
+}
+
+@keyframes bubble-life {
+  0% { transform: translate(-50%, 8px) scale(0.85); opacity: 0; }
+  8% { transform: translate(-50%, 0) scale(1.04); opacity: 1; }
+  14%, 88% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -8px) scale(0.98); opacity: 0; }
+}
+
+/* 上方座位貼著畫面頂端，泡泡往上會被切掉 —— 改掛在頭像下方 */
+.oseat--top .oseat__say {
+  bottom: auto;
+  /* 讓過暱稱與標籤 */
+  top: calc(100% + 30px);
+  animation-name: bubble-life-down;
+}
+
+.oseat--top .oseat__say::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: #fff;
+}
+
+@keyframes bubble-life-down {
+  0% { transform: translate(-50%, -8px) scale(0.85); opacity: 0; }
+  8% { transform: translate(-50%, 0) scale(1.04); opacity: 1; }
+  14%, 88% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, 8px) scale(0.98); opacity: 0; }
 }
 
 .oseat__name {
@@ -503,6 +571,37 @@
 
 .game__tool.is-on {
   background: var(--btn-gold);
+}
+
+/* 自己的泡泡：疊在表情按鈕上方 */
+.mybubble {
+  position: absolute;
+  left: 18px;
+  bottom: 148px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(260px, 60vw);
+  pointer-events: none;
+  animation: pop-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mybubble__text {
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 2px solid #fff;
+  background: var(--paper-2, #fff);
+  color: #3B2A5A;
+  font: 700 13px/1.25 var(--font-display);
+  overflow-wrap: anywhere;
+  box-shadow: var(--lift-sm);
+}
+
+.mybubble__text.is-emote {
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 8px;
 }
 
 .game__tray {

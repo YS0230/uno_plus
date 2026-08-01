@@ -115,6 +115,7 @@ export function Game() {
         </div>
       )}
 
+      <MyBubble />
       <UnoButton />
 
       {pendingWild && <ColorPicker onPick={chooseColor} onCancel={() => setPendingWild(null)} />}
@@ -205,7 +206,7 @@ function OpponentSeat({
   isCurrent: boolean;
   canCatch: boolean;
 }) {
-  const emote = useStore((s) => s.emotes.find((e) => e.playerId === opponent.id));
+  const bubble = useStore((s) => s.bubbles.find((b) => b.playerId === opponent.id));
   const fan = Math.min(opponent.handCount, 7);
 
   return (
@@ -226,7 +227,12 @@ function OpponentSeat({
         <div className="oseat__avatar">
           <Avatar id={opponent.avatar} size="md" dim={!opponent.connected} ring={isCurrent ? '#FFD644' : undefined} />
           <span className="oseat__count">{opponent.handCount}</span>
-          {emote && <span className="oseat__emote">{emote.emote}</span>}
+          {bubble &&
+            (bubble.kind === 'emote' ? (
+              <span className="oseat__emote">{bubble.text}</span>
+            ) : (
+              <span className="oseat__say">{bubble.text}</span>
+            ))}
         </div>
         <span className="oseat__name">{opponent.nickname}</span>
         <div className="oseat__tags">
@@ -246,6 +252,24 @@ function OpponentSeat({
           抓 UNO！
         </button>
       )}
+    </div>
+  );
+}
+
+// -------------------------------------------------------- 自己的泡泡
+
+/** 牌桌上沒有自己的座位，所以把自己的表情／訊息貼在表情按鈕上方，送出後看得到回饋 */
+function MyBubble() {
+  const me = useStore((s) => s.profile?.playerId);
+  const avatar = useStore((s) => s.profile?.avatar);
+  const bubble = useStore((s) => s.bubbles.find((b) => b.playerId === me));
+
+  if (!bubble || !avatar) return null;
+
+  return (
+    <div className="mybubble" aria-live="polite">
+      <Avatar id={avatar} size="xs" />
+      <span className={`mybubble__text ${bubble.kind === 'emote' ? 'is-emote' : ''}`}>{bubble.text}</span>
     </div>
   );
 }

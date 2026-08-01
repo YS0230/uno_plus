@@ -5,7 +5,6 @@ import type {
   CardColor,
   ChatMessage,
   CreateRoomInput,
-  EmoteEvent,
   GameFeedEvent,
   GameResult,
   GameView,
@@ -21,6 +20,14 @@ export type Route = 'home' | 'lobby' | 'create' | 'howto';
 export interface Toast {
   id: number;
   kind: 'info' | 'warn' | 'error' | 'success';
+  text: string;
+}
+
+/** 牌桌上飄在頭像旁的泡泡：表情或玩家講的話，幾秒後自動消失 */
+export interface SeatBubble {
+  id: number;
+  playerId: string;
+  kind: 'emote' | 'text';
   text: string;
 }
 
@@ -43,7 +50,7 @@ interface State {
   result: GameResult | null;
 
   chat: ChatMessage[];
-  emotes: EmoteEvent[];
+  bubbles: SeatBubble[];
   feed: GameFeedEvent[];
   lobbyRooms: RoomSummary[];
   toasts: Toast[];
@@ -72,7 +79,7 @@ export const useStore = create<State>((set, get) => ({
   result: null,
 
   chat: [],
-  emotes: [],
+  bubbles: [],
   feed: [],
   lobbyRooms: [],
   toasts: [],
@@ -99,6 +106,22 @@ function applyProfile(profile: Profile): void {
   storage.nickname = profile.nickname;
   storage.avatar = profile.avatar;
   useStore.setState({ profile });
+}
+
+/** 泡泡停留時間：文字要讀，留久一點（跟 Game.css 的動畫長度對齊） */
+const BUBBLE_MS: Record<SeatBubble['kind'], number> = { emote: 3000, text: 4200 };
+
+let bubbleSeq = 0;
+
+/** 同一個人只留最新一則，泡泡才不會疊在一起 */
+function showBubble(playerId: string, kind: SeatBubble['kind'], text: string): void {
+  const id = ++bubbleSeq;
+  useStore.setState({
+    bubbles: [...useStore.getState().bubbles.filter((b) => b.playerId !== playerId), { id, playerId, kind, text }],
+  });
+  setTimeout(() => {
+    useStore.setState({ bubbles: useStore.getState().bubbles.filter((b) => b.id !== id) });
+  }, BUBBLE_MS[kind]);
 }
 
 let wired = false;
@@ -131,11 +154,11 @@ export function connect(): void {
     const prev = st().room;
     // 離開房間就把對局殘留一併清掉
     if (!room) {
-      useStore.setState({ room: null, game: null, result: null, chat: [], feed: [], emotes: [] });
+      useStore.setState({ room: null, game: null, result: null, chat: [], feed: [], bubbles: [] });
       return;
     }
     if (prev && prev.code !== room.code) {
-      useStore.setState({ chat: [], feed: [], emotes: [], game: null, result: null });
+      useStore.setState({ chat: [], feed: [], bubbles: [], game: null, result: null });
     }
     if (room.phase === 'lobby' && prev?.phase !== 'lobby') {
       useStore.setState({ result: null });
@@ -193,14 +216,13 @@ export function connect(): void {
   socket.on('chat:message', (message) => {
     useStore.setState({ chat: [...st().chat.slice(-59), message] });
     if (message.kind === 'system' && message.text.includes('加入')) playSound('join');
+    // 玩家講的話也在牌桌上冒個泡泡，遊戲中不用開聊天室就看得到
+    if (message.kind === 'player' && message.playerId) {
+      showBubble(message.playerId, 'text', message.text);
+    }
   });
 
-  socket.on('chat:emote', (event) => {
-    useStore.setState({ emotes: [...st().emotes.filter((e) => e.playerId !== event.playerId), event] });
-    setTimeout(() => {
-      useStore.setState({ emotes: useStore.getState().emotes.filter((e) => e.at !== event.at) });
-    }, 3000);
-  });
+  socket.on('chat:emote', (event) => showBubble(event.playerId, 'emote', event.emote));
 
   socket.on('toast', ({ kind, text }) => st().toast(kind, text));
 
