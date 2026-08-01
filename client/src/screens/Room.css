@@ -61,6 +61,22 @@
   min-height: 0;
 }
 
+/* 座位數多於可視高度時（.panel 本身 overflow:hidden）讓面板內容可捲動 */
+.room__players .panel__body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.room__players .panel__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.room__players .panel__body::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+
 /* ------------------------------------------------------------------ 座位 */
 
 .room__seats {
@@ -162,8 +178,21 @@
 }
 
 @media (max-width: 760px) {
+  /* 單欄時內容會超過一個視窗高，改成整頁捲動，避免玩家列表被裁掉 */
+  .room {
+    flex: none;
+    min-height: 100%;
+  }
+
   .room__grid {
+    flex: none;
     grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .room__players,
+  .room__chat {
+    min-height: auto;
   }
 
   .room__chat .chat__list {
