@@ -18,7 +18,6 @@ export function Home() {
 
       <div className="home__hero">
         <img className="home__logo" src="/assets/logo.png" alt="UNO" width={280} />
-        <p className="home__tagline">泡泡糖玩具風 · 即時多人對戰</p>
       </div>
 
       <div className="home__menu">
