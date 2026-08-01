@@ -1,6 +1,6 @@
 /** Socket.IO client。自動重連交給 socket.io 本身，重連後靠 sessionToken 找回座位。 */
 import { io, type Socket } from 'socket.io-client';
-import type { Ack, AvatarId, ClientToServerEvents, ServerToClientEvents } from '@uno/shared';
+import { AVATARS, type Ack, type AvatarId, type ClientToServerEvents, type ServerToClientEvents } from '@uno/shared';
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -8,24 +8,44 @@ const TOKEN_KEY = 'uno.sessionToken';
 const NICK_KEY = 'uno.nickname';
 const AVATAR_KEY = 'uno.avatar';
 
+/** 無痕模式／配額滿時 localStorage 會直接丟例外，包起來免得整個 app 掛掉 */
+function read(key: string): string | undefined {
+  try {
+    return localStorage.getItem(key) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function write(key: string, value: string | undefined): void {
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch {
+    /* 存不進去就算了，記憶體裡的狀態還是對的 */
+  }
+}
+
 export const storage = {
   get token(): string | undefined {
-    return localStorage.getItem(TOKEN_KEY) ?? undefined;
+    return read(TOKEN_KEY);
   },
   set token(v: string | undefined) {
-    if (v) localStorage.setItem(TOKEN_KEY, v);
+    write(TOKEN_KEY, v);
   },
   get nickname(): string | undefined {
-    return localStorage.getItem(NICK_KEY) ?? undefined;
+    return read(NICK_KEY);
   },
   set nickname(v: string | undefined) {
-    if (v) localStorage.setItem(NICK_KEY, v);
+    write(NICK_KEY, v);
   },
   get avatar(): AvatarId | undefined {
-    return (localStorage.getItem(AVATAR_KEY) as AvatarId | null) ?? undefined;
+    const saved = read(AVATAR_KEY) as AvatarId | undefined;
+    // 版本更新後頭像清單可能改過，擋掉已經不存在的 id
+    return saved && AVATARS.includes(saved) ? saved : undefined;
   },
   set avatar(v: AvatarId | undefined) {
-    if (v) localStorage.setItem(AVATAR_KEY, v);
+    write(AVATAR_KEY, v);
   },
 };
 

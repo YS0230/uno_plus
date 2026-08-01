@@ -93,6 +93,14 @@ export const useStore = create<State>((set, get) => ({
 
 // --------------------------------------------------------------- 事件接線
 
+/** 伺服器回來的身分一律走這裡：同時更新畫面狀態與 localStorage，兩邊不會不同步 */
+function applyProfile(profile: Profile): void {
+  storage.token = profile.sessionToken;
+  storage.nickname = profile.nickname;
+  storage.avatar = profile.avatar;
+  useStore.setState({ profile });
+}
+
 let wired = false;
 
 export function connect(): void {
@@ -113,10 +121,8 @@ export function connect(): void {
   socket.on('disconnect', () => useStore.setState({ connected: false }));
 
   socket.on('session', (profile) => {
-    storage.token = profile.sessionToken;
-    storage.nickname = profile.nickname;
-    storage.avatar = profile.avatar;
-    useStore.setState({ profile, everConnected: true });
+    applyProfile(profile);
+    useStore.setState({ everConnected: true });
   });
 
   socket.on('lobby:rooms', (lobbyRooms) => useStore.setState({ lobbyRooms }));
@@ -224,8 +230,14 @@ export const actions = {
     playSound('click');
   },
 
-  updateProfile(nickname: string, avatar: AvatarId) {
-    return run(emit('profile:update', { nickname, avatar }));
+  async updateProfile(nickname: string, avatar: AvatarId): Promise<Profile | null> {
+    // 先寫進 localStorage：就算此刻連線斷了，重整後 identify 還是會帶著新設定上去
+    storage.nickname = nickname;
+    storage.avatar = avatar;
+
+    const profile = await run(emit('profile:update', { nickname, avatar }));
+    if (profile) applyProfile(profile);
+    return profile;
   },
 
   watchLobby(on: boolean): void {

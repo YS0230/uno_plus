@@ -380,3 +380,54 @@ describe('重連', () => {
     await expect(call(stranger, 'room:leave')).resolves.toBeNull();
   });
 });
+
+describe('玩家設定', () => {
+  it('改暱稱與頭像會回 ack，也會補推 session', async () => {
+    const me = await makeClient('舊名字');
+    const pushed = waitFor<'session'>(me.socket, 'session');
+
+    const acked = await call<Profile>(me.socket, 'profile:update', { nickname: '新名字', avatar: 'robot' });
+
+    expect(acked).toMatchObject({ nickname: '新名字', avatar: 'robot', playerId: me.profile.playerId });
+    // 前端靠這一發把 localStorage 與畫面狀態一起更新
+    expect(await pushed).toMatchObject({ nickname: '新名字', avatar: 'robot' });
+  });
+
+  it('改過的設定會跟著 session 走，重連後還在', async () => {
+    const me = await makeClient('舊名字');
+    await call<Profile>(me.socket, 'profile:update', { nickname: '新名字', avatar: 'robot' });
+
+    me.socket.disconnect();
+    const revived: ClientSocket = connect(`http://localhost:${port}`, { transports: ['websocket'] });
+    clients.push(revived);
+    await new Promise<void>((resolve) => revived.on('connect', () => resolve()));
+
+    const back = await call<Profile>(revived, 'identify', { sessionToken: me.profile.sessionToken });
+    expect(back).toMatchObject({ nickname: '新名字', avatar: 'robot', playerId: me.profile.playerId });
+  });
+
+  it('在房間裡改名，其他人的名單會跟著更新', async () => {
+    const host = await makeClient('房主');
+    const { code } = await call<RoomView>(host.socket, 'room:create', ROOM);
+    const guest = await makeClient('客人');
+    await call(guest.socket, 'room:join', { code });
+
+    const hostView = waitFor<'room:state'>(
+      host.socket,
+      'room:state',
+      (room) => room?.players.some((p) => p.nickname === '改過的客人') ?? false,
+    );
+    await call<Profile>(guest.socket, 'profile:update', { nickname: '改過的客人', avatar: 'robot' });
+
+    const seat = (await hostView as RoomView).players.find((p) => p.id === guest.profile.playerId);
+    expect(seat).toMatchObject({ nickname: '改過的客人', avatar: 'robot' });
+  });
+
+  it('空白暱稱會被擋下來', async () => {
+    const me = await makeClient('舊名字');
+    await expect(call(me.socket, 'profile:update', { nickname: '   ', avatar: 'robot' })).rejects.toThrow('暱稱不能空白');
+
+    const back = await call<Profile>(me.socket, 'identify', { sessionToken: me.profile.sessionToken });
+    expect(back.nickname).toBe('舊名字');
+  });
+});

@@ -287,12 +287,15 @@ export function registerHandlers(io: IO): void {
         pushGame(room);
       }
 
-      ok(ack, {
+      const profile: Profile = {
         playerId: session.playerId,
         sessionToken: session.token,
         nickname: session.nickname,
         avatar: session.avatar,
-      });
+      };
+      ok(ack, profile);
+      // 和 identify 一樣補一發 session，前端不管用 ack 或事件收都會拿到同一份身分
+      socket.emit('session', profile);
     });
 
     // ---------------------------------------------------------------- 大廳

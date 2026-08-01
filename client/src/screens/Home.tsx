@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AVATARS, type AvatarId } from '@uno/shared';
 import { Avatar, Button, Field, Icon, Modal } from '../components/ui.tsx';
 import { actions, useStore } from '../store.ts';
+import { storage } from '../net/socket.ts';
 import { isBgmOn, isSfxOn, setBgm, setSfx } from '../audio/synth.ts';
 import './Home.css';
 
@@ -54,10 +55,14 @@ function PlayerChip({ onEdit }: { onEdit: () => void }) {
   const profile = useStore((s) => s.profile);
   const connected = useStore((s) => s.connected);
 
+  // 還沒拿到 session 前先用上次存的設定，避免每次進來都閃一下「連線中…」
+  const avatar = profile?.avatar ?? storage.avatar;
+  const nickname = profile?.nickname ?? storage.nickname;
+
   return (
     <button type="button" className="player-chip" onClick={() => { actions.click(); onEdit(); }}>
-      {profile ? <Avatar id={profile.avatar} size="sm" /> : <div className="player-chip__ghost" />}
-      <span className="player-chip__name">{profile?.nickname ?? '連線中…'}</span>
+      {avatar ? <Avatar id={avatar} size="sm" /> : <div className="player-chip__ghost" />}
+      <span className="player-chip__name">{nickname ?? '連線中…'}</span>
       <span className={`player-chip__dot ${connected ? 'is-on' : ''}`} aria-hidden />
       <span className="sr-only">{connected ? '已連線' : '連線中'}</span>
     </button>
@@ -69,6 +74,8 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
   const [nickname, setNickname] = useState(profile.nickname);
   const [avatar, setAvatar] = useState<AvatarId>(profile.avatar);
 
+  const [busy, setBusy] = useState(false);
+
   const save = async () => {
     actions.click();
     const trimmed = nickname.trim();
@@ -76,7 +83,12 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
       useStore.getState().toast('warn', '暱稱不能空白');
       return;
     }
-    await actions.updateProfile(trimmed, avatar);
+    setBusy(true);
+    const saved = await actions.updateProfile(trimmed, avatar);
+    setBusy(false);
+    // 存失敗就留在原地，讓玩家看得到錯誤也不會以為改好了
+    if (!saved) return;
+    useStore.getState().toast('success', '設定已儲存');
     onClose();
   };
 
@@ -88,7 +100,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
       footer={
         <>
           <Button tone="sky" onClick={() => { actions.click(); onClose(); }}>取消</Button>
-          <Button tone="green" onClick={save}>確定</Button>
+          <Button tone="green" onClick={save} disabled={busy}>確定</Button>
         </>
       }
     >
