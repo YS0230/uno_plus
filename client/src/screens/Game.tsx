@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { COLORS, type Card, type CardColor, type OpponentView } from '@uno/shared';
 import { UnoCard } from '../components/UnoCard.tsx';
 import { Avatar, Badge, Button, Icon } from '../components/ui.tsx';
@@ -22,6 +22,10 @@ export function Game() {
   const me = useStore((s) => s.profile?.playerId);
   const [pendingWild, setPendingWild] = useState<Card | null>(null);
   const [trayOpen, setTrayOpen] = useState<'none' | 'emote' | 'quick'>('none');
+
+  // 出牌過場：牌先在畫面中央亮相，再飛進棄牌堆
+  const discardRef = useRef<HTMLDivElement>(null);
+  const flight = usePlayFlight(game?.discardTop ?? null);
 
   if (!game || !room) return null;
 
@@ -59,10 +63,19 @@ export function Game() {
           />
         ))}
 
-        <TableCenter />
+        <TableCenter discardRef={discardRef} topOverride={flight?.prev ?? null} />
       </div>
 
-      <MyHand playable={playable} onPlay={playCard} />
+      <MyHand playable={playable} onPlay={playCard} showStatus={!!me} />
+
+      {flight && (
+        <PlayFlight
+          key={flight.seq}
+          card={flight.card}
+          targetRef={discardRef}
+          onDone={flight.done}
+        />
+      )}
 
       <div className="game__tools">
         <button
@@ -105,7 +118,6 @@ export function Game() {
       <UnoButton />
 
       {pendingWild && <ColorPicker onPick={chooseColor} onCancel={() => setPendingWild(null)} />}
-      {me && <MyStatus />}
     </div>
   );
 }
@@ -240,9 +252,20 @@ function OpponentSeat({
 
 // ------------------------------------------------------------ 桌面中央
 
-function TableCenter() {
+/**
+ * @param topOverride 出牌過場進行中時，棄牌堆先繼續顯示上一張，
+ *                    等飛過來的牌落定才換成新的，避免同一張牌同時出現兩次。
+ */
+function TableCenter({
+  discardRef,
+  topOverride,
+}: {
+  discardRef: React.RefObject<HTMLDivElement>;
+  topOverride: Card | null;
+}) {
   const game = useStore((s) => s.game)!;
   const canDraw = game.isMyTurn && !game.hasDrawnThisTurn;
+  const top = topOverride ?? game.discardTop;
 
   return (
     <div className="center">
@@ -261,8 +284,8 @@ function TableCenter() {
       </div>
 
       <div className="center__pile">
-        <div className="center__discard">
-          {game.discardTop ? <UnoCard card={game.discardTop} size="md" /> : <UnoCard faceDown size="md" />}
+        <div className="center__discard" ref={discardRef}>
+          {top ? <UnoCard card={top} size="md" /> : <UnoCard faceDown size="md" />}
           {game.activeColor && (
             <span
               className="center__color"
@@ -279,11 +302,169 @@ function TableCenter() {
   );
 }
 
+// ------------------------------------------------------------- 出牌過場
+
+/** 牌在畫面中央亮相的時間 */
+const FLIGHT_HOLD_MS = 320;
+/** 從中央飛進棄牌堆的時間 */
+const FLIGHT_FLY_MS = 320;
+
+interface Flight {
+  card: Card;
+  /** 過場期間棄牌堆先顯示的那一張（上一張） */
+  prev: Card;
+  seq: number;
+  done: () => void;
+}
+
+let flightSeq = 0;
+
+const prefersReducedMotion = () =>
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * 棄牌堆頂端換牌時，安排一次「中央亮相 → 飛進牌堆」的過場。
+ * 開局發的第一張、或中途重連時沒有「上一張」，就不播，直接顯示。
+ */
+function usePlayFlight(top: Card | null): Flight | null {
+  const [flight, setFlight] = useState<Flight | null>(null);
+  const shown = useRef<Card | null>(top);
+
+  useEffect(() => {
+    const prev = shown.current;
+    if ((top?.id ?? null) === (prev?.id ?? null)) return;
+    shown.current = top;
+    if (!top || !prev || prefersReducedMotion()) {
+      setFlight(null);
+      return;
+    }
+    const seq = ++flightSeq;
+    setFlight({ card: top, prev, seq, done: () => setFlight((f) => (f?.seq === seq ? null : f)) });
+  }, [top]);
+
+  return flight;
+}
+
+function PlayFlight({
+  card,
+  targetRef,
+  onDone,
+}: {
+  card: Card;
+  targetRef: React.RefObject<HTMLDivElement>;
+  onDone: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [dest, setDest] = useState<{ dx: number; dy: number; scale: number } | null>(null);
+
+  // 亮相結束後量一次棄牌堆位置再飛，避免視窗縮放後座標過期
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const el = ref.current;
+      const target = targetRef.current;
+      if (!el || !target) {
+        onDone();
+        return;
+      }
+      const from = el.getBoundingClientRect();
+      const to = target.getBoundingClientRect();
+      setDest({
+        dx: to.left + to.width / 2 - (from.left + from.width / 2),
+        dy: to.top + to.height / 2 - (from.top + from.height / 2),
+        // getBoundingClientRect 帶了放大後的尺寸，換算絕對縮放要用未變形的 offsetWidth
+        scale: to.width / el.offsetWidth,
+      });
+    }, FLIGHT_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [targetRef, onDone]);
+
+  // 以 transitionend 收尾，計時器只當保險；早一格移除會讓牌在落點前跳掉
+  useEffect(() => {
+    if (!dest) return;
+    const el = ref.current;
+    const finish = (e: TransitionEvent) => {
+      if (e.target === el && e.propertyName === 'transform') onDone();
+    };
+    el?.addEventListener('transitionend', finish);
+    const timer = setTimeout(onDone, FLIGHT_FLY_MS + 200);
+    return () => {
+      el?.removeEventListener('transitionend', finish);
+      clearTimeout(timer);
+    };
+  }, [dest, onDone]);
+
+  return (
+    <div
+      ref={ref}
+      className={`flight ${dest ? 'is-flying' : ''}`}
+      aria-hidden
+      style={
+        dest
+          ? ({ '--dx': `${dest.dx}px`, '--dy': `${dest.dy}px`, '--fs': dest.scale } as React.CSSProperties)
+          : undefined
+      }
+    >
+      <div className="flight__pop">
+        <UnoCard card={card} className="flight__card" />
+      </div>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ 手牌
 
-function MyHand({ playable, onPlay }: { playable: Set<string>; onPlay: (card: Card) => void }) {
+const HAND_CARD_MAX = 108;
+const HAND_CARD_MIN = 54;
+/** 舒適間距：相鄰兩張的位移 = 卡寬 × 這個比例 */
+const HAND_STEP_RATIO = 0.78;
+/** 最擠也要露出左側 30%，角標（數字／符號）才讀得到 */
+const HAND_MIN_STEP_RATIO = 0.3;
+/** 真的塞不下時的下限，超過就讓它捲動 */
+const HAND_HARD_STEP_RATIO = 0.18;
+
+/** 依可用寬度算出卡寬與疊牌間距，讓整副手牌盡量一眼看完、不撐出畫面 */
+function layoutHand(count: number, width: number): { cardW: number; step: number; overflowing: boolean } {
+  const base = width >= 460 ? HAND_CARD_MAX : 92;
+  if (count <= 1 || width <= 0) return { cardW: base, step: base, overflowing: false };
+
+  const fitted = width / (1 + (count - 1) * HAND_MIN_STEP_RATIO);
+  const cardW = Math.round(Math.max(HAND_CARD_MIN, Math.min(base, fitted)));
+  const step = Math.max(
+    cardW * HAND_HARD_STEP_RATIO,
+    Math.min(cardW * HAND_STEP_RATIO, (width - cardW) / (count - 1)),
+  );
+
+  return { cardW, step, overflowing: cardW + (count - 1) * step > width + 0.5 };
+}
+
+function useContentWidth(ref: React.RefObject<HTMLElement>): number {
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+
+  return width;
+}
+
+function MyHand({
+  playable,
+  onPlay,
+  showStatus,
+}: {
+  playable: Set<string>;
+  onPlay: (card: Card) => void;
+  showStatus: boolean;
+}) {
   const game = useStore((s) => s.game)!;
   const hand = game.hand;
+  const railRef = useRef<HTMLDivElement>(null);
+  const width = useContentWidth(railRef);
+  const { cardW, step, overflowing } = layoutHand(hand.length, width);
 
   // 扇形展開：牌多的時候角度收斂，並夾住最大角度，免得旋轉後的外擴被容器裁掉
   const spread = useMemo(() => {
@@ -291,13 +472,18 @@ function MyHand({ playable, onPlay }: { playable: Set<string>; onPlay: (card: Ca
     const perCard = n <= 7 ? 4 : n <= 12 ? 2.5 : 1.6;
     return hand.map((_, i) => {
       const angle = (i - (n - 1) / 2) * perCard;
-      return Math.max(-10, Math.min(10, angle));
+      return Math.max(-8, Math.min(8, angle));
     });
   }, [hand]);
 
   return (
     <div className="hand">
-      <div className="hand__rail scroll-x">
+      {showStatus && <MyStatus />}
+      <div
+        ref={railRef}
+        className={`hand__rail scroll-x ${overflowing ? 'is-tight' : ''}`}
+        style={{ '--hand-card-h': `${Math.round((cardW * 200) / 140)}px` } as React.CSSProperties}
+      >
         {hand.map((card, i) => (
           <UnoCard
             key={card.id}
@@ -307,6 +493,13 @@ function MyHand({ playable, onPlay }: { playable: Set<string>; onPlay: (card: Ca
             playable={game.isMyTurn && playable.has(card.id)}
             dimmed={game.isMyTurn && !playable.has(card.id)}
             onClick={() => onPlay(card)}
+            style={
+              {
+                '--card-w': `${cardW}px`,
+                marginLeft: i === 0 ? 0 : `${Math.round(step - cardW)}px`,
+                zIndex: i,
+              } as React.CSSProperties
+            }
           />
         ))}
         {hand.length === 0 && <p className="hand__empty">手牌已出完！</p>}

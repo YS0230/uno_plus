@@ -319,30 +319,35 @@
 
 .hand {
   flex: none;
+  position: relative;
 }
 
 /*
- * overflow-x: auto 會強制 overflow-y 變成 auto/hidden，牌就會被裁掉。
- * 所以高度要留足：卡牌本身 154px + 旋轉的外擴 + hover 上浮 22px 的空間。
+ * 卡寬與疊牌間距由 Game.tsx 依容器寬度算好後用 inline style 帶進來，
+ * 手牌永遠塞得進畫面，所以預設不需要捲動、也就不必裁掉 hover 上浮的部分。
+ * 高度跟著算出來的卡高走：卡高 + 旋轉外擴 + hover 上浮 22px 的空間。
  */
 .hand__rail {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 2px;
   padding: 34px 12px 6px;
+  overflow: visible;
+  min-height: calc(var(--hand-card-h, 154px) + 62px);
+}
+
+/* 牌多到連最小間距都塞不下時才退回捲動；此時要靠左，否則置中的溢出內容捲不到左邊 */
+.hand__rail.is-tight {
+  justify-content: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
-  min-height: 220px;
 }
 
-.hand__rail > .uno-card {
-  margin-left: -22px;
-}
-
-.hand__rail > .uno-card:first-child {
-  margin-left: 0;
+/* 疊牌時被壓在下面的牌，hover／focus 要能整張浮到最上層 */
+.hand__rail > .uno-card:hover,
+.hand__rail > .uno-card:focus-visible {
+  z-index: 40 !important;
 }
 
 .hand__empty {
@@ -362,14 +367,56 @@
 
 /* ------------------------------------------------------------- 我的狀態 */
 
+/* 貼在手牌上緣：手牌高度會隨牌數變動，所以錨在 .hand 而不是畫面底部 */
 .mystatus {
   position: absolute;
   left: 50%;
-  bottom: 158px;
+  top: 0;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  z-index: 5;
+  z-index: 45;
+}
+
+/* ------------------------------------------------------------- 出牌過場 */
+
+/*
+ * 出的牌先在畫面正中央亮相（--dx/--dy 為 0、放大 1.35 倍），
+ * 量到棄牌堆座標後改寫這三個變數，transform 的 transition 就把它送過去。
+ */
+.flight {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 60;
+  pointer-events: none;
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(var(--fs, 1.35));
+}
+
+.flight.is-flying {
+  transition: transform var(--flight-fly, 320ms) cubic-bezier(0.45, 0.05, 0.55, 1);
+}
+
+.flight__card {
+  --card-w: clamp(96px, 26vw, 132px);
+  filter:
+    drop-shadow(0 10px 0 rgba(30, 20, 60, 0.3))
+    drop-shadow(0 0 26px rgba(255, 245, 190, 0.9));
+}
+
+/* 亮相的彈跳只作用在內層，外層的 transform 要留給位移用 */
+.flight__pop {
+  animation: flight-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes flight-pop {
+  0% { transform: scale(0.55) rotate(-12deg); opacity: 0.2; }
+  60% { transform: scale(1.06) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flight { display: none; }
 }
 
 /* ------------------------------------------------------------- UNO 按鈕 */
@@ -568,12 +615,10 @@
   .center__discard .uno-card { --card-w: 64px; }
 
   .hand__rail {
-    justify-content: flex-start;
-    min-height: 186px;
     /* 左右留空給表情按鈕與 UNO 按鈕，手牌才不會被壓在下面 */
     padding: 26px 84px 6px 56px;
+    min-height: calc(var(--hand-card-h, 132px) + 54px);
   }
-  .hand__rail > .uno-card { --card-w: 92px; margin-left: -30px; }
 
   .unobtn {
     width: 76px;
@@ -587,8 +632,6 @@
   .game__tools { left: 8px; bottom: 80px; }
   .game__tool { width: 40px; height: 40px; font-size: 19px; }
   .game__tray { left: 56px; bottom: 80px; }
-
-  .mystatus { bottom: 136px; }
 
   .turnbar__item, .turnbar__now { padding: 5px 10px; font-size: 12px; }
 }
