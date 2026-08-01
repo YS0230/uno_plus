@@ -12,7 +12,15 @@ import {
   type ServerToClientEvents,
 } from '@uno/shared';
 import { GameEngine } from './game.ts';
-import { DISCONNECT_GRACE_MS, Room, normalizeOptions, rooms, verifyPassword, type Player } from './rooms.ts';
+import {
+  DISCONNECT_GRACE_MS,
+  LOBBY_GRACE_MS,
+  Room,
+  normalizeOptions,
+  rooms,
+  verifyPassword,
+  type Player,
+} from './rooms.ts';
 import { resolveSession, sessionOfPlayer, sweepSessions, type Session } from './sessions.ts';
 import { sanitizeNickname } from './nicknames.ts';
 
@@ -143,18 +151,31 @@ export function registerHandlers(io: IO): void {
     room.game?.nudgeAI();
   };
 
-  const onDisconnect = (session: Session) => {
+  const onDisconnect = (socket: Sock, session: Session) => {
     const room = session.roomCode ? rooms.get(session.roomCode) : undefined;
     if (!room) return;
     const player = room.find(session.playerId);
     if (!player) return;
 
+    // 重新整理時，新連線的 identify 可能比舊連線的 disconnect 還早到；
+    // 座位已經換手就不要再把它標成離線
+    if (player.socketId && player.socketId !== socket.id) return;
+
     player.connected = false;
     player.socketId = null;
 
-    // 還沒開打就直接讓出座位，不用佔著
+    if (player.graceTimer) clearTimeout(player.graceTimer);
+
+    // 還沒開打：留一小段寬限期，讓重新整理／換網路的人回得來
     if (room.phase === 'lobby') {
-      leaveRoom(session);
+      pushRoom(room);
+      player.graceTimer = setTimeout(() => {
+        player.graceTimer = null;
+        if (player.connected) return;
+        // 寬限期內剛好開局的話就照對局規則交給 AI，別把人從牌桌上抽掉
+        if (room.phase === 'playing') handOverToAI(room, player);
+        else leaveRoom(session);
+      }, LOBBY_GRACE_MS);
       return;
     }
 
@@ -162,7 +183,6 @@ export function registerHandlers(io: IO): void {
     pushRoom(room);
     pushGame(room);
 
-    if (player.graceTimer) clearTimeout(player.graceTimer);
     player.graceTimer = setTimeout(() => {
       player.graceTimer = null;
       handOverToAI(room, player);
@@ -192,7 +212,8 @@ export function registerHandlers(io: IO): void {
     player.socketId = socket.id;
     socket.join(room.code);
 
-    if (wasAway) systemSay(room, `${player.nickname} 回來了`);
+    // 等待階段的重新整理不必昭告天下，避免洗版
+    if (wasAway && room.phase !== 'lobby') systemSay(room, `${player.nickname} 回來了`);
     return room;
   };
 
@@ -542,7 +563,7 @@ export function registerHandlers(io: IO): void {
     socket.on('disconnect', () => {
       lobbyWatchers.delete(socket.id);
       const session = ctx();
-      if (session) onDisconnect(session);
+      if (session) onDisconnect(socket, session);
       pushLobby();
     });
   });

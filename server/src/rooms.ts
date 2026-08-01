@@ -20,6 +20,8 @@ import { aiNickname, randomAvatar } from './nicknames.ts';
 
 /** 真人斷線後保留座位的時間；超過就交給 AI 接手 */
 export const DISCONNECT_GRACE_MS = 60_000;
+/** 還在房間等待階段時的斷線寬限；主要是讓「重新整理」不會被踢出房間 */
+export const LOBBY_GRACE_MS = 20_000;
 const CHAT_HISTORY = 60;
 const ROOM_IDLE_MS = 30 * 60_000;
 

@@ -334,6 +334,35 @@ describe('重連', () => {
     }
   });
 
+  it('在房間等待時重新整理，座位還在（不會被踢出房間）', async () => {
+    const host = await makeClient('房主');
+    const { code } = await call<{ code: string }>(host.socket, 'room:create', ROOM);
+
+    const guest = await makeClient('路人');
+    await call(guest.socket, 'room:join', { code });
+    await call(guest.socket, 'room:ready', { ready: true });
+
+    // 重新整理＝斷線後用同一個 token 立刻連回來
+    guest.socket.disconnect();
+    const revived: ClientSocket = connect(`http://localhost:${port}`, { transports: ['websocket'] });
+    clients.push(revived);
+    await new Promise<void>((resolve) => revived.on('connect', () => resolve()));
+
+    const roomBack = waitFor<'room:state'>(revived, 'room:state', (r) => r !== null);
+    await call<Profile>(revived, 'identify', { sessionToken: guest.profile.sessionToken });
+    const room = (await roomBack) as RoomView;
+
+    expect(room.code).toBe(code);
+    const me = room.players.find((p) => p.id === guest.profile.playerId);
+    expect(me?.connected).toBe(true);
+    expect(me?.isReady).toBe(true);
+
+    // 房主那邊看到的也是同一份名單（監聽要先掛好，pushRoom 是在 ack 之前送出的）
+    const hostView = waitFor<'room:state'>(host.socket, 'room:state', (r) => r !== null);
+    await call(revived, 'room:ready', { ready: false });
+    expect((await hostView as RoomView).players.map((p) => p.id)).toContain(guest.profile.playerId);
+  });
+
   it('沒帶 token 就是新玩家，不會撿到別人的座位', async () => {
     const host = await makeClient('房主');
     await call(host.socket, 'room:create', ROOM);
